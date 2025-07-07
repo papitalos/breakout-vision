@@ -40,33 +40,16 @@ def process_frame(frame, showFindObjects):
         # Desenha um 'X' vermelho
         cv2.drawMarker(frame_with_points, (x, y), (0, 0, 255), markerType=cv2.MARKER_TILTED_CROSS)
 
+    window_name = 'Pontos de Interesse Find Objects'
+    
     if showFindObjects:
-        cv2.imshow('Pontos de Interesse Find Objects', frame_with_points)
-    elif cv2.getWindowProperty('Pontos de Interesse Find Objects', cv2.WND_PROP_VISIBLE) >= 1:
-        cv2.destroyWindow('Pontos de Interesse Find Objects')
-
+        cv2.imshow(window_name, frame_with_points)
+    else:
+        try:
+            # Tenta fechar a janela apenas se ela existir
+            cv2.getWindowProperty(window_name, cv2.WND_PROP_VISIBLE)
+            cv2.destroyWindow(window_name)
+        except cv2.error:
+            pass
 
     return gradient_Prewitt
-
-
-def find_card_center(image):
-    # Aplica limiar para identificar contornos
-    ret, thresh = cv2.threshold(image, 0.5, 1.0, cv2.THRESH_BINARY)
-
-    # Encontra contornos
-    contours, _ = cv2.findContours((thresh * 255).astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-    if contours:
-        # Encontrar o maior contorno+-
-        max_contour = max(contours, key=cv2.contourArea)
-
-        # Calcula o centro do contorno
-        M = cv2.moments(max_contour)
-        if M["m00"] != 0:
-            cx = int(M["m10"] / M["m00"])
-            cy = int(M["m01"] / M["m00"])
-            return (cx, cy)
-        else:
-            return None
-    else:
-        return None

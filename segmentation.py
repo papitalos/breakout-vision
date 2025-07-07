@@ -1,12 +1,20 @@
 import cv2
 
+# Variáveis globais para os valores HSV
+hmin = 46
+hmax = 100
+smin = 53
+smax = 200
+vmin = 83
+vmax = 255
+
 
 def update_segmentation(image_hsv, showSegmentation):
+    global hmin, hmax, smin, smax, vmin, vmax
+    
     if hmin < hmax:
         ret, mask_hmin = cv2.threshold(src=image_hsv[:, :, 0], thresh=hmin, maxval=1, type=cv2.THRESH_BINARY)
-
         ret, mask_hmax = cv2.threshold(src=image_hsv[:, :, 0], thresh=hmax, maxval=1, type=cv2.THRESH_BINARY_INV)
-
     else:
         ret, mask_hmin = cv2.threshold(src=image_hsv[:, :, 0], thresh=hmin, maxval=1, type=cv2.THRESH_BINARY_INV)
         ret, mask_hmax = cv2.threshold(src=image_hsv[:, :, 0], thresh=hmax, maxval=1, type=cv2.THRESH_BINARY)
@@ -15,9 +23,7 @@ def update_segmentation(image_hsv, showSegmentation):
 
     if hmin < hmax:
         ret, mask_smin = cv2.threshold(src=image_hsv[:, :, 1], thresh=smin, maxval=1, type=cv2.THRESH_BINARY)
-
         ret, mask_smax = cv2.threshold(src=image_hsv[:, :, 1], thresh=smax, maxval=1, type=cv2.THRESH_BINARY_INV)
-
     else:
         ret, mask_smin = cv2.threshold(src=image_hsv[:, :, 1], thresh=smin, maxval=1, type=cv2.THRESH_BINARY_INV)
         ret, mask_smax = cv2.threshold(src=image_hsv[:, :, 1], thresh=smax, maxval=1, type=cv2.THRESH_BINARY)
@@ -26,36 +32,31 @@ def update_segmentation(image_hsv, showSegmentation):
 
     if hmin < hmax:
         ret, mask_vmin = cv2.threshold(src=image_hsv[:, :, 2], thresh=vmin, maxval=1, type=cv2.THRESH_BINARY)
-
         ret, mask_vmax = cv2.threshold(src=image_hsv[:, :, 2], thresh=vmax, maxval=1, type=cv2.THRESH_BINARY_INV)
-
     else:
         ret, mask_vmin = cv2.threshold(src=image_hsv[:, :, 2], thresh=vmin, maxval=1, type=cv2.THRESH_BINARY_INV)
         ret, mask_vmax = cv2.threshold(src=image_hsv[:, :, 2], thresh=vmax, maxval=1, type=cv2.THRESH_BINARY)
 
     mask_v = mask_vmax * mask_vmin
 
-    # cv2.imshow("Mask H", mask_h * 255)
-    # cv2.imshow("Mask S", mask_s * 255)
-    # cv2.imshow("Mask V", mask_v * 255)
-
     mask = mask_h * mask_s * mask_v * 255
 
+    window_name = "Mask Segmentation"
     if showSegmentation:
-        cv2.imshow("Mask Segmentation", mask)
-    elif cv2.getWindowProperty("Mask Segmentation", cv2.WND_PROP_VISIBLE) >= 1:
-        cv2.destroyWindow("Mask Segmentation")
+        cv2.imshow(window_name, mask)
+    else:
+        try:
+            # Tenta fechar a janela apenas se ela existir
+            if cv2.getWindowProperty(window_name, cv2.WND_PROP_VISIBLE) >= 0:
+                cv2.destroyWindow(window_name)
+        except cv2.error:
+            pass  # Ignora o erro se a janela não existir
 
     return mask
 
 
 def create_trackbar():
-    hmin = 46
-    hmax = 100
-    smin = 53
-    smax = 200
-    vmin = 83
-    vmax = 255
+    global hmin, hmax, smin, smax, vmin, vmax
 
     def on_change_hmin(val):
         global hmin

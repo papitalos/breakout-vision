@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/ProjectIVC.iml" filepath="$PROJECT_DIR$/.idea/ProjectIVC.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/breakout-vision.iml" filepath="$PROJECT_DIR$/.idea/breakout-vision.iml" />
     </modules>
   </component>
 </project>

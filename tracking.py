@@ -36,30 +36,43 @@ def detect_and_initialize(frame):
 
 
 def execute_tracking(frame, showTracking):
-    tracker = cv2.TrackerCSRT_create()
+    # Criando um tracker simples baseado em meanshift
     bbox = detect_and_initialize(frame)
     frame_copy = frame.copy()
 
-    if bbox:
-        tracker = initialize_tracker(tracker, frame, bbox)
-    else:
+    if bbox is None:
         print("Não foi possível detectar uma ROI válida.")
         return frame, None
 
-    success, bbox = update_tracker(tracker, frame)
-    if success:
-        p1 = (int(bbox[0]), int(bbox[1]))
-        p2 = (int(bbox[0] + bbox[2]), int(bbox[1] + bbox[3]))
-        cv2.rectangle(frame_copy, p1, p2, (255, 0, 0), 2, 1)
+    x, y, w, h = bbox
+    track_window = (x, y, w, h)
+    
+    # Configurando os parâmetros do meanshift
+    roi = frame[y:y+h, x:x+w]
+    hsv_roi = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
+    mask = cv2.inRange(hsv_roi, np.array([0., 60., 32.]), np.array([180., 255., 255.]))
+    roi_hist = cv2.calcHist([hsv_roi], [0], mask, [180], [0, 180])
+    cv2.normalize(roi_hist, roi_hist, 0, 255, cv2.NORM_MINMAX)
+    
+    # Definindo critérios de terminação, 10 iterações ou movimento de pelo menos 1 ponto
+    term_crit = ( cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 1 )
+    
+    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    dst = cv2.calcBackProject([hsv],[0],roi_hist,[0,180],1)
 
-        if showTracking:
-            cv2.imshow("Tracking Line", frame_copy)
-        elif cv2.getWindowProperty("Tracking Line", cv2.WND_PROP_VISIBLE) >= 1:
-            cv2.destroyWindow("Tracking Line")
+    # Aplica meanshift para obter a nova localização
+    ret, track_window = cv2.meanShift(dst, track_window, term_crit)
+    
+    # Desenha o retângulo na imagem
+    x,y,w,h = track_window
+    cv2.rectangle(frame_copy, (x,y), (x+w,y+h), (255, 0, 0) ,2)
 
-        return frame_copy, bbox
-    else:
-        return frame, None
+    if showTracking:
+        cv2.imshow("Tracking Line", frame_copy)
+    elif cv2.getWindowProperty("Tracking Line", cv2.WND_PROP_VISIBLE) >= 1:
+        cv2.destroyWindow("Tracking Line")
+
+    return frame_copy, (x, y, w, h)
 
 
 def calculate_center(bbox):
